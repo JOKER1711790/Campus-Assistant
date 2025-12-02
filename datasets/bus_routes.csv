@@ -1,0 +1,11 @@
+route_name,origin,destination,departure_time,arrival_time,days_of_week
+Campus Shuttle 1,Main Gate,Engineering Block,08:00,08:15,MON-FRI
+Campus Shuttle 1,Engineering Block,Main Gate,17:00,17:15,MON-FRI
+Campus Shuttle 2,Hostel Complex,Academic Block,07:30,07:45,MON-FRI
+Campus Shuttle 2,Academic Block,Hostel Complex,18:00,18:15,MON-FRI
+Campus Shuttle 3,Library,Science Block,09:00,09:10,MON-FRI
+Campus Shuttle 3,Science Block,Library,16:00,16:10,MON-FRI
+Weekend Shuttle,Main Gate,Hostel Complex,10:00,10:20,SAT,SUN
+Weekend Shuttle,Hostel Complex,Main Gate,18:00,18:20,SAT,SUN
+Night Shuttle,Library,Hostel Complex,21:00,21:15,MON-FRI
+Night Shuttle,Computer Center,Hostel Complex,22:00,22:15,MON-FRI

@@ -1,0 +1,16 @@
+name,email,phone,room,designation,department_code,department_name
+Dr. A. Sharma,asharma@univ.edu,9876543210,CS-201,Professor,CSE,Computer Science Engineering
+Dr. P. Kumar,pkumar@univ.edu,9876543211,CS-202,Associate Professor,CSE,Computer Science Engineering
+Dr. R. Singh,rsingh@univ.edu,9876543212,MAT-101,Professor,MATH,Mathematics
+Dr. S. Verma,sverma@univ.edu,9876543213,CS-203,Assistant Professor,CSE,Computer Science Engineering
+Prof. M. Patel,mpatel@univ.edu,9876543214,CS-204,Professor,CSE,Computer Science Engineering
+Dr. K. Reddy,kreddy@univ.edu,9876543215,CS-205,Associate Professor,CSE,Computer Science Engineering
+Dr. N. Gupta,ngupta@univ.edu,9876543216,HS-201,Professor,HS,Humanities
+Dr. S. Bose,shose@univ.edu,9876543217,EC-201,Professor,ECE,Electronics and Communication
+Dr. T. Roy,troy@univ.edu,9876543218,EC-202,Associate Professor,ECE,Electronics and Communication
+Dr. P. Chatterjee,pchatterjee@univ.edu,9876543219,EC-203,Assistant Professor,ECE,Electronics and Communication
+Prof. R. Iyer,riyer@univ.edu,9876543220,CS-206,Professor,CSE,Computer Science Engineering
+Dr. S. Das,sdas@univ.edu,9876543221,CS-207,Associate Professor,CSE,Computer Science Engineering
+Dr. R. Mehta,rmehta@univ.edu,9876543222,CS-208,Assistant Professor,CSE,Computer Science Engineering
+Dr. S. Kapoor,skapoor@univ.edu,9876543223,PHY-101,Professor,PHY,Physics
+Dr. A. Joshi,ajoshi@univ.edu,9876543224,CHE-101,Professor,CHE,Chemistry

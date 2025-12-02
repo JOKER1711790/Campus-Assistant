@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <div id="result">Testing...</div>
+    <script>
+        fetch("http://localhost:8000/api/health")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("result").innerHTML = 
+                    "✅ Backend is reachable!<br>Response: " + JSON.stringify(data);
+            })
+            .catch(err => {
+                document.getElementById("result").innerHTML = 
+                    "❌ Backend connection failed:<br>" + err.message;
+            });
+    </script>
+</body>
+</html>
+

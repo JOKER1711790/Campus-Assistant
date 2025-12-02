@@ -1,0 +1,17 @@
+program,semester,section,day_of_week,start_time,end_time,course_code,course_title,room,faculty_name
+B.Tech CSE,3,A,MON,09:00,10:00,CS301,Data Structures and Algorithms,CS-101,Dr. A. Sharma
+B.Tech CSE,3,A,MON,10:00,11:00,CS302,Database Management Systems,CS-102,Dr. P. Kumar
+B.Tech CSE,3,A,MON,11:00,12:00,MATH201,Discrete Mathematics,LT-1,Dr. R. Singh
+B.Tech CSE,3,A,TUE,09:00,10:00,CS303,Computer Networks,CS-103,Dr. S. Verma
+B.Tech CSE,3,A,TUE,10:00,11:00,CS304,Operating Systems,CS-104,Prof. M. Patel
+B.Tech CSE,3,A,WED,09:00,10:00,CS301,Data Structures and Algorithms,CS-101,Dr. A. Sharma
+B.Tech CSE,3,A,WED,10:00,11:00,LAB301,Data Structures Lab,CS-LAB1,Dr. A. Sharma
+B.Tech CSE,3,A,THU,09:00,11:00,LAB302,Database Lab,CS-LAB2,Dr. P. Kumar
+B.Tech CSE,3,A,FRI,10:00,11:00,CS305,Software Engineering,CS-105,Dr. K. Reddy
+B.Tech CSE,3,A,FRI,11:00,12:00,HS101,Communication Skills,HS-101,Dr. N. Gupta
+B.Tech ECE,2,A,MON,08:00,09:00,EC201,Digital Electronics,EC-101,Dr. S. Bose
+B.Tech ECE,2,A,MON,09:00,10:00,EC202,Signals and Systems,EC-102,Dr. T. Roy
+B.Tech ECE,2,A,TUE,08:00,10:00,LAB201,Electronics Lab,EC-LAB1,Dr. S. Bose
+B.Tech ECE,2,A,WED,10:00,11:00,EC203,Circuit Theory,EC-103,Dr. P. Chatterjee
+M.Tech CSE,1,A,MON,14:00,16:00,CS501,Advanced Algorithms,CS-201,Prof. R. Iyer
+M.Tech CSE,1,A,TUE,14:00,16:00,CS502,Machine Learning,CS-202,Dr. S. Das

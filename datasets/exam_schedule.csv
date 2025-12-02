@@ -1,0 +1,11 @@
+program,semester,course_code,course_title,exam_date,start_time,end_time,room
+B.Tech CSE,3,CS301,Data Structures and Algorithms,2025-05-10,09:00,12:00,Exam Hall A
+B.Tech CSE,3,CS302,Database Management Systems,2025-05-12,14:00,17:00,Exam Hall A
+B.Tech CSE,3,MATH201,Discrete Mathematics,2025-05-15,09:00,12:00,Exam Hall B
+B.Tech CSE,3,CS303,Computer Networks,2025-05-18,14:00,17:00,Exam Hall C
+B.Tech CSE,3,CS304,Operating Systems,2025-05-20,09:00,12:00,Exam Hall A
+B.Tech ECE,2,EC201,Digital Electronics,2025-05-11,09:00,12:00,Exam Hall D
+B.Tech ECE,2,EC202,Signals and Systems,2025-05-13,14:00,17:00,Exam Hall D
+M.Tech CSE,1,CS501,Advanced Algorithms,2025-05-22,09:00,12:00,Exam Hall E
+M.Tech CSE,1,CS502,Machine Learning,2025-05-25,14:00,17:00,Exam Hall E
+B.Tech CSE,3,CS305,Software Engineering,2025-05-22,14:00,17:00,Exam Hall B
