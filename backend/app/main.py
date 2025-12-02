@@ -7,9 +7,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import get_settings
-from .db import Base, engine
-from .routers import core as core_router
+from app.config import get_settings
+from app.db import Base, engine
+from app.routers.core import router as core_router
+from app.routers.authentication import router as auth_router
 
 
 settings = get_settings()
@@ -41,7 +42,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(core_router.router, prefix=settings.api_prefix)
-
-
-
+# API routers
+app.include_router(core_router, prefix=settings.api_prefix)
+app.include_router(auth_router, prefix=f"{settings.api_prefix}/auth")

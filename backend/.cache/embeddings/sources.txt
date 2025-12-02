@@ -1,5 +1,2 @@
-faq_1
-faq_2
-faq_3
-event_1
-event_2
+notice_2025_03_15
+policy_wifi

@@ -115,5 +115,24 @@ class ChatResponse(BaseModel):
     exams: list[ExamScheduleOut] | None = None
     faqs: list[FAQOut] | None = None
 
+# --- Authentication Schemas ---
 
+class User(BaseModel):
+    student_id: str
+    email: str
+    is_active: bool
 
+    class Config:
+        orm_mode = True
+
+class UserCreate(BaseModel):
+    student_id: str
+    email: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    student_id: str | None = None

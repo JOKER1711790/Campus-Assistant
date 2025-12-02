@@ -97,14 +97,14 @@ def _classify_intent(message: str) -> str:
     """
 
     text = message.lower()
-    if any(k in text for k in ["timetable", "class time", "schedule"]):
-        return "timetable_query"
     if any(k in text for k in ["bus", "shuttle"]):
         return "bus_schedule_query"
-    if any(k in text for k in ["event", "fest", "hackathon"]):
-        return "events_query"
     if any(k in text for k in ["exam", "midterm", "final"]):
         return "exam_schedule_query"
+    if any(k in text for k in ["timetable", "class time", "schedule"]):
+        return "timetable_query"
+    if any(k in text for k in ["event", "fest", "hackathon"]):
+        return "events_query"
     if any(k in text for k in ["faculty", "professor", "teacher", "hod"]):
         return "faculty_directory_query"
     if any(k in text for k in ["faq", "how do i", "where can i"]):
@@ -229,5 +229,4 @@ async def chat(
         exams=None,
         faqs=faqs,
     )
-
 

@@ -1,5 +1,2 @@
-FAQ: How can I get my ID card? Answer: You can collect your ID card from the administrative office between 10 AM and 4 PM on working days.
-FAQ: Where can I see my timetable? Answer: You can view your personalized timetable on the student portal under the Academics section.
-FAQ: Is there Wi-Fi on campus? Answer: Yes
-Event: Tech Fest 2025 Description: Annual technical festival with workshops and hackathons
-Event: Orientation Session Description: Welcome session for first-year students
+Notice: Library will be closed on March 15th for maintenance. All books due on that date will have their due date extended by one day.
+Campus Wi-Fi Policy: Students can access Wi-Fi using their student ID. Network name: CampusWiFi. Password: student_id@campus

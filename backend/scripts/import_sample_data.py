@@ -13,6 +13,7 @@ from pathlib import Path
 
 from sqlalchemy import select
 
+from app import auth
 from app.db import AsyncSessionLocal
 from app.models import (
     BusRoute,
@@ -22,6 +23,7 @@ from app.models import (
     FAQ,
     FacultyMember,
     TimetableEntry,
+    User,
 )
 
 
@@ -170,6 +172,38 @@ async def import_faqs(session):
             session.add(faq)
 
 
+async def import_users(session):
+    """
+    Import initial users from `users.csv`.
+
+    This is useful for seeding demo accounts. Passwords are stored
+    in plain text in the CSV and hashed before saving.
+    """
+
+    path = DATASETS_DIR / "users.csv"
+    if not path.exists():
+        return
+
+    with path.open(newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Skip if user with same email already exists
+            existing = await session.execute(
+                select(User).where(User.email == row["email"])
+            )
+            if existing.scalars().first():
+                continue
+
+            hashed_password = auth.get_password_hash(row["password"])
+            user = User(
+                student_id=row["student_id"],
+                email=row["email"],
+                hashed_password=hashed_password,
+                is_active=True,
+            )
+            session.add(user)
+
+
 async def main():
     async with AsyncSessionLocal() as session:
         await import_faculty(session)
@@ -178,6 +212,7 @@ async def main():
         await import_events(session)
         await import_exam_schedule(session)
         await import_faqs(session)
+        await import_users(session)
         await session.commit()
     print("Sample data imported successfully.")
 

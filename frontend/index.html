@@ -4,45 +4,299 @@
     <meta charset="UTF-8" />
     <title>Smart Campus Assistant</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Tailwind via CDN (fine for MVP; switch to build step later) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React via CDN -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <style>
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 3px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+      @keyframes bounce {
+        0%, 100% {
+          transform: translateY(-25%);
+          animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+        }
+        50% {
+          transform: translateY(0);
+          animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+        }
+      }
+      .bouncing-loader div {
+        animation: bounce 1s infinite;
+      }
+      .bouncing-loader div:nth-child(2) {
+        animation-delay: -0.1s;
+      }
+      .bouncing-loader div:nth-child(3) {
+        animation-delay: -0.2s;
+      }
+    </style>
   </head>
   <body class="bg-slate-900 text-slate-100">
     <div id="root" class="min-h-screen flex items-center justify-center"></div>
 
     <script type="text/javascript">
-      const { useState, useEffect, useRef } = React;
+      const { useState, useEffect, useRef, createContext, useContext } = React;
+
+      // --- Authentication ---
+      const AuthContext = createContext(null);
+
+      function useAuth() {
+        return useContext(AuthContext);
+      }
+
+      function AuthProvider({ children }) {
+        const [user, setUser] = useState(null);
+        const [token, setToken] = useState(localStorage.getItem("token"));
+
+        useEffect(() => {
+          if (token) {
+            setUser({ isAuthenticated: true });
+            localStorage.setItem("token", token);
+          } else {
+            setUser(null);
+            localStorage.removeItem("token");
+          }
+        }, [token]);
+
+        async function login(studentId, password) {
+          const res = await fetch("http://localhost:8000/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              username: studentId,
+              password: password,
+            }),
+          });
+
+          if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Login failed: ${errorText}`);
+          }
+
+          const data = await res.json();
+          setToken(data.access_token);
+        }
+
+        async function register(studentId, email, password) {
+            const res = await fetch("http://localhost:8000/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    student_id: studentId,
+                    email: email,
+                    password: password,
+                }),
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`Registration failed: ${errorText}`);
+            }
+            
+            // auto-login after registration
+            await login(studentId, password);
+        }
+
+        function logout() {
+          setToken(null);
+        }
+
+        const value = { user, token, login, logout, register };
+
+        return React.createElement(AuthContext.Provider, { value }, children);
+      }
+      
+      function AuthForm({ onToggle, isRegister = false }) {
+        const [studentId, setStudentId] = useState('');
+        const [email, setEmail] = useState('');
+        const [password, setPassword] = useState('');
+        const [error, setError] = useState(null);
+        const [loading, setLoading] = useState(false);
+        const { login, register } = useAuth();
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+          setError(null);
+          setLoading(true);
+          try {
+            if (isRegister) {
+              await register(studentId, email, password);
+            } else {
+              await login(studentId, password);
+            }
+          } catch (err) {
+            setError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        return React.createElement("div", { className: "w-full max-w-sm p-8 space-y-6 bg-slate-800 rounded-lg shadow-md" },
+          React.createElement("h1", { className: "text-2xl font-bold text-center text-white" }, isRegister ? "Register" : "Login"),
+          React.createElement("form", { onSubmit: handleSubmit, className: "space-y-6" },
+            React.createElement("div", null,
+              React.createElement("label", { htmlFor: "studentId", className: "text-sm font-medium text-slate-300" }, "Student ID"),
+              React.createElement("input", {
+                id: "studentId", type: "text", value: studentId, onChange: (e) => setStudentId(e.target.value), required: true,
+                className: "w-full px-3 py-2 mt-1 text-slate-100 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              })
+            ),
+            isRegister && React.createElement("div", null,
+              React.createElement("label", { htmlFor: "email", className: "text-sm font-medium text-slate-300" }, "Email"),
+              React.createElement("input", {
+                id: "email", type: "email", value: email, onChange: (e) => setEmail(e.target.value), required: true,
+                className: "w-full px-3 py-2 mt-1 text-slate-100 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              })
+            ),
+            React.createElement("div", null,
+              React.createElement("label", { htmlFor: "password", className: "text-sm font-medium text-slate-300" }, "Password"),
+              React.createElement("input", {
+                id: "password", type: "password", value: password, onChange: (e) => setPassword(e.target.value), required: true,
+                className: "w-full px-3 py-2 mt-1 text-slate-100 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              })
+            ),
+            error && React.createElement("p", { className: "text-sm text-red-400" }, error),
+            React.createElement("button", {
+              type: "submit", disabled: loading,
+              className: "w-full py-2 px-4 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            }, loading ? 'Processing...' : (isRegister ? 'Register' : 'Login')),
+            React.createElement("p", { className: "text-sm text-center text-slate-400" },
+              isRegister ? "Already have an account? " : "Don\'t have an account? ",
+              React.createElement("button", { type: "button", onClick: onToggle, className: "font-medium text-indigo-400 hover:text-indigo-300" },
+                isRegister ? "Login" : "Register"
+              )
+            )
+          )
+        );
+      }
+
+      // --- Chat Components ---
+      function AssistantIcon() { /* ... icon svg ... */ }
+      function UserIcon() { /* ... icon svg ... */ }
+      function Table({title, rows, columns}) { /* ... table rendering ... */ }
+      function ChatMessage({ message }) { /* ... message rendering ... */ }
+      function QuickActions({ onSelect }) { /* ... quick actions ... */ }
+      function LoadingIndicator() { /* ... loading indicator ... */ }
+
+      // ... (Keep the existing implementations for AssistantIcon, UserIcon, Table, ChatMessage, QuickActions, LoadingIndicator)
+      function AssistantIcon() {
+        return React.createElement("div", {
+          className: "w-8 h-8 rounded-full bg-indigo-500 flex-shrink-0 flex items-center justify-center"
+        }, React.createElement("svg", {
+          className: "w-5 h-5 text-white",
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 20 20",
+          fill: "currentColor"
+        }, React.createElement("path", {
+          d: "M10 9a3 3 0 100-6 3 3 0 000 6zM6 8a2 2 0 11-4 0 2 2 0 014 0zM1.49 15.326a.78.78 0 01-.358-.442 3 3 0 014.308-3.516 6.484 6.484 0 00-1.905 3.959c-.023.222-.014.442.028.658a4 4 0 01-2.073-.658zM10 15.75a2.25 2.25 0 002.25-2.25H7.75A2.25 2.25 0 0010 15.75zM14 8a2 2 0 11-4 0 2 2 0 014 0zm2.51 7.326a.78.78 0 01-.358.442 4 4 0 01-2.073.658c.042-.216.051-.436.028-.658a6.484 6.484 0 00-1.905-3.959 3 3 0 014.308 3.516z"
+        })));
+      }
+
+      function UserIcon() {
+        return React.createElement("div", {
+          className: "w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center"
+        }, React.createElement("svg", {
+          className: "w-5 h-5 text-white",
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 20 20",
+          fill: "currentColor"
+        }, React.createElement("path", {
+          fillRule: "evenodd",
+          d: "M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z",
+          clipRule: "evenodd"
+        })));
+      }
+      
+      function Table({title, rows, columns}) {
+        if (!rows || !rows.length) return null;
+
+        return React.createElement("div", {className: "mt-3"},
+            React.createElement("h4", {className: "text-sm font-semibold mb-2"}, title),
+            React.createElement("div", {className: "overflow-x-auto"}, 
+                React.createElement("table", {className: "min-w-full text-xs border-collapse"},
+                    React.createElement("thead", {className: "bg-slate-700"},
+                        React.createElement("tr", null,
+                            columns.map(col => React.createElement("th", {key: col, className: "px-3 py-2 text-left font-medium tracking-wider"}, col.replace(/_/g, ' ').replace(/\b(\w)/g, c => c.toUpperCase())))
+                        )
+                    ),
+                    React.createElement("tbody", {className: "bg-slate-800"},
+                        rows.map((row, i) => React.createElement("tr", {key: i, className: "border-b border-slate-700"},
+                            columns.map(col => React.createElement("td", {key: col, className: "px-3 py-2"}, row[col] ?? ''))
+                        ))
+                    )
+                )
+            )
+        )
+      }
 
       function ChatMessage({ message }) {
         const isUser = message.role === "user";
+
+        const renderContent = () => {
+            const parts = [];
+            let lastIndex = 0;
+        
+            const tableRegex = /\n\n(.*?)\n([\w\s|]+)\n[-]+\n([\s\S]*?)(?=\n\n|$)/g;
+            let match;
+
+            while ((match = tableRegex.exec(message.content)) !== null) {
+                if (match.index > lastIndex) {
+                    parts.push(message.content.substring(lastIndex, match.index));
+                }
+            
+                const [fullMatch, title, header, body] = match;
+                const columns = header.split(' | ');
+                const rows = body.trim().split('\n').map(line => {
+                    const values = line.split(' | ');
+                    let rowData = {};
+                    columns.forEach((col, i) => {
+                        rowData[col] = values[i];
+                    });
+                    return rowData;
+                });
+
+                parts.push(React.createElement(Table, { title, columns, rows, key: lastIndex }));
+                lastIndex = match.index + fullMatch.length;
+            }
+
+            if (lastIndex < message.content.length) {
+                parts.push(message.content.substring(lastIndex));
+            }
+
+            return parts;
+        };
+        
         return React.createElement(
           "div",
           {
-            className:
-              "flex mb-3 " + (isUser ? "justify-end" : "justify-start"),
+            className: "flex items-start gap-3 mb-4 " + (isUser ? "justify-end" : "justify-start"),
           },
+          !isUser && React.createElement(AssistantIcon),
           React.createElement(
             "div",
             {
               className:
-                "max-w-[80%] rounded-2xl px-4 py-2 shadow " +
+                "max-w-[85%] rounded-lg px-4 py-2 shadow " +
                 (isUser
-                  ? "bg-blue-600 text-white rounded-br-sm"
-                  : "bg-slate-800 text-slate-50 rounded-bl-sm"),
+                  ? "bg-blue-600 text-white rounded-br-none"
+                  : "bg-slate-800 text-slate-50 rounded-bl-none"),
             },
-            React.createElement(
-              "div",
-              {
-                className:
-                  "text-[11px] uppercase tracking-wide mb-1 opacity-60",
-              },
-              isUser ? "You" : "Assistant"
-            ),
-            React.createElement("div", { className: "text-sm whitespace-pre-wrap leading-relaxed" }, message.content)
-          )
+            React.createElement("div", { className: "text-sm whitespace-pre-wrap leading-relaxed" }, 
+              isUser ? message.content : renderContent()
+            )
+          ),
+          isUser && React.createElement(UserIcon)
         );
       }
 
@@ -56,7 +310,7 @@
 
         return React.createElement(
           "div",
-          { className: "flex flex-wrap gap-2 mb-3" },
+          { className: "flex flex-wrap justify-center gap-2 mb-4" },
           actions.map((a) =>
             React.createElement(
               "button",
@@ -64,26 +318,41 @@
                 key: a.label,
                 onClick: () => onSelect(a.value),
                 className:
-                  "text-xs px-3 py-1 rounded-full border border-slate-600/70 bg-slate-800/70 hover:bg-slate-700/80 transition-colors",
+                  "text-xs px-3 py-1 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition-colors",
               },
               a.label
             )
           )
         );
       }
+      
+      function LoadingIndicator() {
+          return React.createElement('div', { className: "flex items-start gap-3 mb-4 justify-start" },
+            React.createElement(AssistantIcon),
+            React.createElement('div', { className: 'bg-slate-800 rounded-lg px-4 py-3 shadow' },
+              React.createElement('div', { className: 'bouncing-loader flex space-x-1' },
+                React.createElement('div', { className: 'w-2 h-2 bg-slate-400 rounded-full' }),
+                React.createElement('div', { className: 'w-2 h-2 bg-slate-400 rounded-full' }),
+                React.createElement('div', { className: 'w-2 h-2 bg-slate-400 rounded-full' })
+              )
+            )
+          );
+      }
 
-      function App() {
+
+      function ChatUI() {
         const [messages, setMessages] = useState([
           {
             role: "assistant",
             content:
-              "Hi! I’m your Smart Campus Assistant. Ask me about timetables, bus schedules, events, exams, or faculty.",
+              "Hi! I’m your Smart Campus Assistant. Ask me about your timetable, bus schedules, events, and more.",
           },
         ]);
         const [input, setInput] = useState("");
         const [loading, setLoading] = useState(false);
         const [error, setError] = useState(null);
         const listRef = useRef(null);
+        const { token, logout } = useAuth();
 
         useEffect(() => {
           if (listRef.current) {
@@ -96,7 +365,7 @@
           setError(null);
           const userMessage = { role: "user", content: text.trim() };
           setMessages((prev) => [...prev, userMessage]);
-          setInput("");
+          setInput(" ");
           setLoading(true);
 
           try {
@@ -104,6 +373,7 @@
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
               },
               body: JSON.stringify({ message: text.trim() }),
             });
@@ -119,47 +389,41 @@
 
             function tableFromArray(title, rows, columns) {
               if (!rows || !rows.length) return "";
-              let out = "\\n\\n" + title + "\\n";
-              out += columns.join(" | ") + "\\n";
-              out += "-".repeat(columns.join(" | ").length) + "\\n";
+              let out = `\n\n${title}\n`;
+              out += columns.join(" | ") + "\n";
+              out += "-".repeat(columns.join(" | ").length) + "\n";
               rows.forEach((r) => {
                 out +=
                   columns
                     .map((c) => String(r[c] ?? ""))
-                    .join(" | ") + "\\n";
+                    .join(" | ") + "\n";
               });
               return out;
             }
 
             if (data.timetable && data.timetable.length) {
               enrichedAnswer += tableFromArray("Timetable", data.timetable, [
-                "day_of_week",
-                "start_time",
-                "end_time",
-                "course_code",
-                "room",
+                "day_of_week", "start_time", "end_time", "course_code", "room",
               ]);
             }
             if (data.bus_routes && data.bus_routes.length) {
               enrichedAnswer += tableFromArray("Bus Routes", data.bus_routes, [
-                "route_name",
-                "origin",
-                "destination",
-                "departure_time",
+                "route_name", "origin", "destination", "departure_time",
               ]);
             }
             if (data.events && data.events.length) {
               enrichedAnswer += tableFromArray("Events", data.events, [
-                "title",
-                "start_date",
-                "location",
+                "title", "start_date", "location",
+              ]);
+            }
+             if (data.exams && data.exams.length) {
+              enrichedAnswer += tableFromArray("Exams", data.exams, [
+                "course_name", "exam_date", "exam_time", "location"
               ]);
             }
 
-            const assistantMessage = {
-              role: "assistant",
-              content: enrichedAnswer,
-            };
+
+            const assistantMessage = { role: "assistant", content: enrichedAnswer, };
             setMessages((prev) => [...prev, assistantMessage]);
           } catch (e) {
             console.error("Chat error:", e);
@@ -178,105 +442,63 @@
 
         return React.createElement(
           "div",
-          {
-            className:
-              "w-full max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col h-screen",
-          },
+          { className: "w-full max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col h-screen", },
           React.createElement(
-            "header",
-            { className: "mb-4" },
-            React.createElement(
-              "h1",
-              { className: "text-xl font-semibold text-white" },
-              "Smart Campus Assistant"
+            "header", { className: "mb-4 flex justify-between items-center" },
+            React.createElement( "div", null,
+              React.createElement( "h1", { className: "text-2xl font-bold text-white" }, "Smart Campus Assistant" ),
+              React.createElement( "p", { className: "text-sm text-slate-400 mt-1" }, "Your one-stop guide to campus life." )
             ),
-            React.createElement(
-              "p",
-              { className: "text-xs text-slate-400 mt-1" },
-              "Ask about timetables, exams, bus schedules, events, faculty, and FAQs in one place."
-            )
+            React.createElement("button", { onClick: logout, className: "text-sm px-3 py-1 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition-colors" }, "Logout")
           ),
           React.createElement(
-            "main",
-            {
-              className:
-                "flex-1 flex flex-col bg-slate-900/40 border border-slate-700/60 rounded-2xl overflow-hidden backdrop-blur",
-            },
+            "main", { className: "flex-1 flex flex-col bg-slate-900/60 border border-slate-700/60 rounded-xl overflow-hidden backdrop-blur-md", },
             React.createElement(
-              "div",
-              { className: "p-4 border-b border-slate-800/80" },
-              React.createElement(QuickActions, {
-                onSelect: (v) => sendMessage(v),
-              })
-            ),
-            React.createElement(
-              "div",
-              {
-                ref: listRef,
-                className:
-                  "flex-1 overflow-y-auto px-4 py-3 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900",
-              },
+              "div", { ref: listRef, className: "flex-1 overflow-y-auto px-6 py-4 space-y-1 scrollbar-thin", },
+              React.createElement(QuickActions, { onSelect: (v) => sendMessage(v) }),
               messages.map((m, i) =>
                 React.createElement(ChatMessage, { key: i, message: m })
               ),
-              loading &&
-                React.createElement(
-                  "div",
-                  { className: "text-xs text-slate-400 mt-2" },
-                  "Thinking…"
-                )
+              loading && React.createElement(LoadingIndicator),
+               error &&
+              React.createElement( "div", { className: "px-4 py-2 text-xs text-red-400 text-center" }, "Error: ", error )
             ),
-            error &&
-              React.createElement(
-                "div",
-                {
-                  className:
-                    "px-4 pb-2 text-xs text-red-400 bg-red-950/40 border-t border-red-900/40",
-                },
-                error
-              ),
             React.createElement(
-              "form",
-              {
-                onSubmit: handleSubmit,
-                className:
-                  "p-3 border-t border-slate-800 flex items-center gap-2 bg-slate-950/60",
-              },
+              "form", { onSubmit: handleSubmit, className: "p-4 border-t border-slate-800 flex items-center gap-3 bg-slate-950/50", },
               React.createElement("input", {
-                type: "text",
-                value: input,
-                onChange: (e) => setInput(e.target.value),
-                placeholder:
-                  "Ask me anything about your campus: \"When is my next class?\"",
-                className:
-                  "flex-1 bg-slate-900/80 border border-slate-700/80 rounded-full px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/70 focus:border-blue-500/70",
+                type: "text", value: input, onChange: (e) => setInput(e.target.value),
+                placeholder: "E.g., \"When is my next class?\"",
+                className: "flex-1 bg-slate-800/80 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
               }),
               React.createElement(
-                "button",
-                {
-                  type: "submit",
-                  disabled: loading,
-                  className:
-                    "inline-flex items-center justify-center px-4 py-2 rounded-full text-sm font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors",
-                },
-                "Send"
+                "button", { type: "submit", disabled: loading, className: "inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-500/50 disabled:cursor-not-allowed transition-colors text-white", },
+                React.createElement("svg", { className: "w-5 h-5", xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 20 20", fill: "currentColor" }, React.createElement("path", { d: "M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" }))
               )
             )
           )
         );
       }
 
-      // React 18 createRoot with fallback for compatibility
-      const rootElement = document.getElementById("root");
-      if (ReactDOM.createRoot) {
-        const root = ReactDOM.createRoot(rootElement);
-        root.render(React.createElement(App));
-      } else {
-        // Fallback for older React versions
-        ReactDOM.render(React.createElement(App), rootElement);
+      function App() {
+        const { user } = useAuth();
+        const [isRegister, setIsRegister] = useState(false);
+
+        if (user) {
+            return React.createElement(ChatUI);
+        }
+
+        return React.createElement(AuthForm, { 
+            isRegister: isRegister,
+            onToggle: () => setIsRegister(!isRegister) 
+        });
       }
+
+      const rootElement = document.getElementById("root");
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        React.createElement(AuthProvider, null, React.createElement(App))
+      );
       
-      // Test backend connectivity on load
       fetch("http://localhost:8000/api/health")
         .then((res) => res.json())
         .then((data) => console.log("Backend health check:", data))
@@ -284,6 +506,3 @@
     </script>
   </body>
 </html>
-
-
-
