@@ -113,3 +113,22 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class UserDocument(Base):
+    """
+    A study document uploaded by a student (PDF, notes, etc.).
+    The raw file is stored on disk; extracted text is stored here for fast access.
+    """
+
+    __tablename__ = "user_documents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    title: Mapped[str] = mapped_column(String(255))
+    original_filename: Mapped[str] = mapped_column(String(255))
+    content_type: Mapped[str | None] = mapped_column(String(100))
+    file_path: Mapped[str] = mapped_column(String(512))
+    text_content: Mapped[str] = mapped_column(Text)  # full extracted text
+
+

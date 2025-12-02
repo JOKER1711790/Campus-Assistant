@@ -11,6 +11,7 @@ from app.config import get_settings
 from app.db import Base, engine
 from app.routers.core import router as core_router
 from app.routers.authentication import router as auth_router
+from app.routers.study import router as study_router
 
 
 settings = get_settings()
@@ -45,3 +46,4 @@ app.add_middleware(
 # API routers
 app.include_router(core_router, prefix=settings.api_prefix)
 app.include_router(auth_router, prefix=f"{settings.api_prefix}/auth")
+app.include_router(study_router, prefix=settings.api_prefix)

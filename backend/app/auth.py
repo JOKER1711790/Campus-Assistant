@@ -9,36 +9,32 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import models, schemas
-from app.config import get_settings
-from app.db import get_db
-
+from . import models, schemas
+from .config import get_settings
+from .db import get_db
 
 settings = get_settings()
 
-
 # --- Password Hashing ---
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# For the MVP we use pbkdf2_sha256 to avoid bcrypt backend issues and length limits.
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a plain-text password against a hashed one."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    # bcrypt (used by passlib here) only supports passwords up to 72 bytes.
-    # To avoid runtime errors with very long passwords, we truncate safely.
-    # This is acceptable for our MVP; for production, consider a KDF before hashing.
-    safe_password = password[:72]
-    return pwd_context.hash(safe_password)
+    """Hash a password using a strong PBKDF2-based scheme (no 72-byte limit)."""
+    return pwd_context.hash(password)
 
 
 # --- JWT Token ---
-# Note: tokenUrl should include the API prefix
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_prefix}/auth/login")
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -47,16 +43,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 
 # --- User Verification ---
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ) -> models.User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -64,10 +57,8 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        student_id: str | None = payload.get("sub")
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        student_id: str = payload.get("sub")
         if student_id is None:
             raise credentials_exception
         token_data = schemas.TokenData(student_id=student_id)
@@ -78,6 +69,7 @@ async def get_current_user(
         select(models.User).where(models.User.student_id == token_data.student_id)
     )
     user = result.scalars().first()
+
     if user is None:
         raise credentials_exception
     return user

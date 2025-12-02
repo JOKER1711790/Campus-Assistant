@@ -115,6 +115,7 @@ class ChatResponse(BaseModel):
     exams: list[ExamScheduleOut] | None = None
     faqs: list[FAQOut] | None = None
 
+
 # --- Authentication Schemas ---
 
 class User(BaseModel):
@@ -136,3 +137,31 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     student_id: str | None = None
+
+
+# --- Study / Document Schemas ---
+
+class UserDocumentOut(BaseModel):
+    id: int
+    title: str
+    original_filename: str
+    content_type: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+
+class DocumentSummary(BaseModel):
+    document_id: int
+    summary: str
+
+
+class QuizQuestion(BaseModel):
+    question: str
+    options: list[str]
+    correct_index: int
+
+
+class QuizResponse(BaseModel):
+    document_id: int
+    questions: list[QuizQuestion]
